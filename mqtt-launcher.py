@@ -108,7 +108,7 @@ def runprog(topic, param=None):
         res = "*****> %s" % str(e)
 
     payload = res.rstrip('\n')
-    (res, mid) =  mqttc.publish(publish, payload, qos=qos, retain=False)
+#    (res, mid) =  mqttc.publish(publish, payload, qos=qos, retain=False)
 
 def on_connect(client, userdata, flags, reason_code, properties):
     if reason_code == 0:
@@ -172,6 +172,7 @@ if __name__ == '__main__':
         mqttc.ws_set_options(path="/ws")
 
     mqttc.connect(cf.get('mqtt_broker', 'localhost'), int(cf.get('mqtt_port', '1883')), 60)
+    (res, mid) =  mqttc.publish('clients/mqtt-launcher', payload="Hola!", qos=0, retain=False)
 
     while True:
         try:
