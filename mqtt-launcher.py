@@ -39,6 +39,7 @@ import paho.mqtt.client as paho # pip install paho-mqtt
 import time
 import socket
 import string
+import socket
 
 qos=2
 CONFIG=os.getenv('MQTTLAUNCHERCONFIG', 'launcher.conf')
@@ -103,11 +104,12 @@ def runprog(topic, param=None):
     logging.debug("Running t=%s: %s" % (topic, cmd))
 
     try:
-        res = subprocess.check_output(cmd, stdin=None, stderr=subprocess.STDOUT, shell=False, universal_newlines=True, cwd='/tmp')
+#        res = subprocess.check_output(cmd, stdin=None, stderr=subprocess.STDOUT, shell=False, universal_newlines=True, cwd='/tmp')
+         res = subprocess.Popen( cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd='/tmp', shell=False, start_new_session=True)
     except Exception as e:
         res = "*****> %s" % str(e)
 
-    payload = res.rstrip('\n')
+#    payload = res.rstrip('\n')
 #    (res, mid) =  mqttc.publish(publish, payload, qos=qos, retain=False)
 
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -135,6 +137,8 @@ if __name__ == '__main__':
     userdata = {
     }
     topiclist = cf.get(TOPIC_LIST_KEY)
+    hostname = socket.gethostname()
+    lwat = "clients/%s/mqtt-launcher" % hostname
 
     if not topiclist:
         logging.info("No topic list. Aborting")
@@ -151,7 +155,7 @@ if __name__ == '__main__':
     mqttc.on_connect = on_connect
     mqttc.on_disconnect = on_disconnect
 
-    mqttc.will_set('clients/mqtt-launcher', payload="Adios!", qos=0, retain=False)
+    mqttc.will_set(lwat, payload="Adios!", qos=0, retain=False)
 
     # Delays will be: 3, 6, 12, 24, 30, 30, ...
     #mqttc.reconnect_delay_set(delay=3, delay_max=30, exponential_backoff=True)
@@ -172,7 +176,7 @@ if __name__ == '__main__':
         mqttc.ws_set_options(path="/ws")
 
     mqttc.connect(cf.get('mqtt_broker', 'localhost'), int(cf.get('mqtt_port', '1883')), 60)
-    (res, mid) =  mqttc.publish('clients/mqtt-launcher', payload="Hola!", qos=0, retain=False)
+    (res, mid) =  mqttc.publish(lwat, payload="Hola!", qos=0, retain=False)
 
     while True:
         try:
